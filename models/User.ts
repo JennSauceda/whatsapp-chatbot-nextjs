@@ -2,7 +2,7 @@ import mongoose, { Schema, model, models } from "mongoose";
 
 const UserSchema = new Schema(
   {
-    phone: {
+    whatsapp: {
       type: String,
       required: true,
       unique: true,
