@@ -14,6 +14,7 @@ type Session = {
   time?: string;
   available?: string[];
   selectedTime?: string;
+  cancelAppointmentId?: string;
 };
 
 const sessions = new Map<string, Session>();
@@ -75,11 +76,12 @@ export async function POST(req: NextRequest) {
 
   if (session.step === "MENU") {
     reply =
-      "👋 Menú principal\n\n" +
+      "👋 *Menú principal*\n\n" +
       "1️⃣ Registrarme\n" +
-      "2️⃣ Agendar cita\n\n" +
-      "Escribe 1 o 2\n" +
-      "Escribe *menu* en cualquier momento";
+      "2️⃣ Agendar cita\n" +
+      "3️⃣ Ver mi cita\n" +
+      "4️⃣ Cancelar mi cita\n\n" +
+      "Escribe el número de la opción";
 
     session.step = "AWAITING_MENU";
   } else if (text === "cancelar") {
@@ -99,8 +101,58 @@ export async function POST(req: NextRequest) {
         session.step = "APPOINTMENT_DATE";
         reply = "📅 ¿Qué fecha deseas? (YYYY-MM-DD)";
       }
+    } else if (message.text?.body === "3") {
+      const appointment = await Appointment.findOne({
+        userWhatsapp: from,
+      }).sort({ createdAt: -1 });
+
+      if (!appointment) {
+        await sendMessage(
+          from,
+          "❌ No tienes ninguna cita agendada.\nEscribe *menu* para volver.",
+        );
+        return NextResponse.json({ ok: true });
+      }
+
+      await sendMessage(
+        from,
+        `📋 *Tu cita*
+
+📅 Fecha: ${appointment.date}
+⏰ Hora: ${appointment.time}`,
+      );
+
+      return NextResponse.json({ ok: true });
+    } else if (message.text?.body === "4") {
+      const appointment = await Appointment.findOne({
+        userWhatsapp: from,
+      }).sort({ createdAt: -1 });
+
+      if (!appointment) {
+        await sendMessage(
+          from,
+          "❌ No tienes citas para cancelar.\nEscribe *menu*.",
+        );
+        return NextResponse.json({ ok: true });
+      }
+
+      session.cancelAppointmentId = appointment._id.toString();
+      session.step = "CONFIRM_CANCEL";
+
+      await sendMessage(
+        from,
+        `⚠️ *Cancelar cita*
+
+📅 Fecha: ${appointment.date}
+⏰ Hora: ${appointment.time}
+
+1️⃣ Confirmar cancelación
+2️⃣ Volver al menú`,
+      );
+
+      return NextResponse.json({ ok: true });
     } else {
-      reply = "❌ Opción inválida. Escribe 1 o 2.";
+      reply = "❌ Opción inválida. Escribe 1, 2, 3 o 4.";
     }
   } else if (session.step === "REGISTER_NAME") {
     session.name = text;
@@ -236,6 +288,24 @@ Intenta con otro horario.`,
         `❌ Cita cancelada.
 Escribe *menu* para volver al inicio.`,
       );
+      return NextResponse.json({ ok: true });
+    }
+
+    await sendMessage(from, "❌ Opción inválida. Responde 1 o 2.");
+    return NextResponse.json({ ok: true });
+  } else if (session.step === "CONFIRM_CANCEL") {
+    if (message.text?.body === "1") {
+      await Appointment.findByIdAndDelete(session.cancelAppointmentId);
+
+      await sendMessage(from, "✅ Tu cita ha sido cancelada.");
+
+      session.step = "DONE";
+      return NextResponse.json({ ok: true });
+    }
+
+    if (message.text?.body === "2") {
+      session.step = "DONE";
+      await sendMessage(from, "Volviendo al menú…");
       return NextResponse.json({ ok: true });
     }
 
