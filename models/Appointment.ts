@@ -1,33 +1,23 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema, models, model } from "mongoose";
 
 const AppointmentSchema = new Schema(
   {
-    userPhone: {
+    userWhatsapp: {
       type: String,
       required: true,
     },
     date: {
-      type: String, // puedes cambiar a Date luego
+      type: String,
       required: true,
     },
     time: {
       type: String,
       required: true,
     },
-    reason: {
-      type: String,
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ["active", "cancelled"],
-      default: "active",
-    },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true },
 );
 
-export default models.Appointment ||
-  model("Appointment", AppointmentSchema);
+AppointmentSchema.index({ date: 1, time: 1 }, { unique: true });
+
+export default models.Appointment || model("Appointment", AppointmentSchema);
