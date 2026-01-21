@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
+import { connectDB } from "@/lib/mongodb";
 import Appointment from "@/models/Appointment";
 import { sendMessage } from "@/lib/whatsapp";
 
@@ -23,7 +23,7 @@ export async function GET() {
 📅 Fecha: ${appt.date}
 ⏰ Hora: ${appt.time}
 
-Si no puedes asistir, escribe *cancelar*.`
+Si no puedes asistir, escribe *cancelar*.`,
     );
   }
 
