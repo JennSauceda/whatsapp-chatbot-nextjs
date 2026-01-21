@@ -75,15 +75,17 @@ export async function POST(req: NextRequest) {
   let reply = "";
 
   if (session.step === "MENU") {
-    reply =
-      "👋 *Menú principal*\n\n" +
-      "1️⃣ Registrarme\n" +
-      "2️⃣ Agendar cita\n" +
-      "3️⃣ Ver mi cita\n" +
-      "4️⃣ Cancelar mi cita\n\n" +
-      "Escribe el número de la opción";
-
+    reply = await buildMenu(from);
     session.step = "AWAITING_MENU";
+  } else if (session.step === "AWAITING_MENU") {
+    reply = await accionesMenu(from, text, session);
+  } else if (session.step === "EDIT_INFO") {
+    reply = await accionesEditarInfo(text, session);
+  } else if (session.step === "EDIT_EMAIL") {
+    reply = await editarCorreo(from, text, session);
+  }
+  else if (session.step === "EDIT_NAME") {
+    reply = await editarNombre(from, text, session);
   } else if (text === "cancelar") {
     session.step = "DONE";
     reply = "❌ Acción cancelada.\n\nEscribe *menu* para comenzar de nuevo.";
@@ -95,7 +97,8 @@ export async function POST(req: NextRequest) {
       const user = await User.findOne({ whatsapp: from });
 
       if (!user) {
-        reply = "❌ Debes registrarte primero.\n\n" + "Escribe *menu* y elige 1️⃣";
+        reply =
+          "❌ Debes registrarte primero.\n\n" + "Escribe *menu* y elige 1️⃣";
         session.step = "DONE";
       } else {
         session.step = "APPOINTMENT_DATE";
@@ -156,7 +159,8 @@ export async function POST(req: NextRequest) {
     }
   } else if (session.step === "REGISTER_NAME") {
     session.name = text;
-    reply = "📧 ¿Cuál es tu correo?\n\n" + "✳️ Escribe *menu* para volver al menú";
+    reply =
+      "📧 ¿Cuál es tu correo?\n\n" + "✳️ Escribe *menu* para volver al menú";
     session.step = "REGISTER_EMAIL";
   } else if (session.step === "REGISTER_EMAIL") {
     session.email = text;
@@ -225,7 +229,11 @@ Escribe *menu* para volver al menú`,
   } else if (session.step === "APPOINTMENT_TIME") {
     const option = parseInt(text);
 
-    if (isNaN(option) || option < 1 || option > (session.available?.length || 0)) {
+    if (
+      isNaN(option) ||
+      option < 1 ||
+      option > (session.available?.length || 0)
+    ) {
       await sendMessage(from, "❌ Opción inválida. Elige un número válido.");
       return NextResponse.json({ ok: true });
     }
@@ -318,6 +326,94 @@ Escribe *menu* para volver al inicio.`,
   await sendMessage(from, reply);
 
   return NextResponse.json({ ok: true });
+}
+async function buildMenu(from: string) {
+  const user = await User.findOne({ whatsapp: from });
+  const appointment = await Appointment.findOne({ userWhatsapp: from });
+
+  let menu = "👋 *Menú principal*\n\n";
+
+  if (!user) {
+    menu += "1️⃣ Registrarme\n";
+  } else {
+    menu += "1️⃣ Editar mi información ✏️\n";
+  }
+
+  if (user) {
+    menu += "2️⃣ Agendar cita\n";
+  }
+
+  if (appointment) {
+    menu += "3️⃣ Ver mi cita\n";
+    menu += "4️⃣ Cancelar mi cita\n";
+  }
+
+  menu += "\nEscribe el número de la opción";
+
+  return menu;
+}
+
+async function accionesMenu(from: string, text: string, session: Session) {
+  const user = await User.findOne({ whatsapp: from });
+  const appointment = await Appointment.findOne({ userWhatsapp: from });
+
+  let reply = "accion no valida";
+  if (!user && text === "1") {
+    session.step = "REGISTER_NAME";
+    reply = "📛 ¿Cuál es tu nombre?";
+  } else if (user && text === "1") {
+    session.step = "EDIT_INFO";
+
+    reply = "1️⃣ Editar mi nombre ✏️\n";
+    reply += "2️⃣ Editar correo ✏️";
+  } else if (user && text === "2") {
+    session.step = "APPOINTMENT_DATE";
+    reply = "📅 ¿Qué fecha deseas? (YYYY-MM-DD)";
+  } else if (appointment && text === "3") {
+    reply = `📋 Tu cita\n\n 📅 ${appointment.date}\n⏰ ${appointment.time}`;
+  } else if (appointment && text === "4") {
+    session.cancelAppointmentId = appointment._id.toString();
+    session.step = "CONFIRM_CANCEL";
+    reply = "⚠️ ¿Confirmas cancelar?\n1️⃣ Sí\n2️⃣ No";
+  } else {
+    reply = "❌ Opción inválida";
+  }
+  return reply;
+}
+async function accionesEditarInfo(text: string, session: Session) {
+
+  let reply = "accion no valida";
+
+  if (text === "1") {
+    session.step = "EDIT_NAME";
+    reply = "Introduce nuevo nombre";
+  } else if (text === "2") {
+    session.step = "EDIT_EMAIL";
+    reply = "Introduce nuevo correo";
+  } else {
+    reply = "❌ Opción inválida";
+  }
+  return reply;
+}
+async function editarNombre(from: string, text: string, session: Session) {
+  let reply = "accion no valida";
+
+  await User.updateOne({ whatsapp: from }, { name: text });
+
+  reply = "✅ Nombre actualizado\n\n ";
+  reply += await buildMenu(from);
+  session.step = "AWAITING_MENU";
+  return reply;
+}
+async function editarCorreo(from: string, text: string, session: Session) {
+  let reply = "accion no valida";
+
+  await User.updateOne({ whatsapp: from }, { email: text });
+
+  reply = "✅ Correo actualizado\n\n ";
+  reply += await buildMenu(from);
+  session.step = "AWAITING_MENU";
+  return reply;
 }
 
 /* =========================

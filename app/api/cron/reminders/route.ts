@@ -8,7 +8,8 @@ export async function GET() {
 
   // 📅 fecha de mañana
   const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  // // tomorrow.setDate(tomorrow.getDate() + 1);
+
 
   const date = tomorrow.toISOString().split("T")[0];
 
@@ -23,7 +24,7 @@ export async function GET() {
 📅 Fecha: ${appt.date}
 ⏰ Hora: ${appt.time}
 
-Si no puedes asistir, escribe *cancelar*.`,
+Si no puedes asistir, escribe *cancelar cita*.`,
     );
   }
 
