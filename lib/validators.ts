@@ -12,3 +12,10 @@ export function isValidTime(time: string) {
   const regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
   return regex.test(time);
 }
+export function isValidEmail(email: string): boolean {
+  const regex =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  return regex.test(email);
+}
+
