@@ -7,7 +7,7 @@ import { verifyAdmin } from "@/lib/auth";
 export async function GET() {
   const admin = await verifyAdmin();
   if (!admin) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    return NextResponse.json([], { status: 401 });
   }
 
   await connectDB();

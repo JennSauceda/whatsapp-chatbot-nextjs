@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import ConfirmModal from "@/components/ConfirmModal";
 
 type Appointment = {
   _id: string;
@@ -12,8 +15,12 @@ type Appointment = {
 };
 
 export default function AdminAppointmentsPage() {
+  const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -37,14 +44,23 @@ export default function AdminAppointmentsPage() {
     setLoading(false);
   };
 
-  const cancel = async (id: string) => {
-    if (!confirm("¿Cancelar esta cita?")) return;
+  const cancelAppointment = async () => {
+    if (!selectedId) return;
 
-    await fetch(`/api/admin/appointments/${id}`, {
+    setLoading(true);
+
+    const res = await fetch(`/api/admin/appointments/${selectedId}`, {
       method: "DELETE",
     });
 
+    setLoading(false);
+    setOpenModal(false);
+    setSelectedId(null);
     load();
+
+    if (res.ok) {
+      router.refresh(); // recarga server components
+    }
   };
 
   useEffect(() => {
@@ -56,7 +72,12 @@ export default function AdminAppointmentsPage() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Citas</h1>
-
+      <Link
+        href="/admin/appointments/new"
+        className="mb-4 inline-block rounded bg-black px-4 py-2 text-white"
+      >
+        + Nueva cita
+      </Link>
       <div className="overflow-x-auto rounded-lg border bg-white">
         <table className="w-full text-sm">
           <thead className="bg-gray-100 text-left">
@@ -80,7 +101,10 @@ export default function AdminAppointmentsPage() {
                 <td className="p-3">{a.whatsapp}</td>
                 <td className="p-3 text-right">
                   <button
-                    onClick={() => cancel(a._id)}
+                    onClick={() => {
+                      setSelectedId(a._id);
+                      setOpenModal(true);
+                    }}
                     className="text-red-600 hover:underline"
                   >
                     Cancelar
@@ -99,6 +123,19 @@ export default function AdminAppointmentsPage() {
           </tbody>
         </table>
       </div>
+      <ConfirmModal
+        open={openModal}
+        title="Cancelar cita"
+        description="¿Seguro que deseas cancelar esta cita? Esta acción no se puede deshacer."
+        confirmText="Sí, cancelar"
+        cancelText="No"
+        loading={loading}
+        onConfirm={cancelAppointment}
+        onCancel={() => {
+          setOpenModal(false);
+          setSelectedId(null);
+        }}
+      />
     </div>
   );
 }

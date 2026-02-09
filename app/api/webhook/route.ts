@@ -5,6 +5,7 @@ import Appointment from "@/models/Appointment";
 import { isValidDate } from "@/lib/validators";
 import { BASE_HOURS } from "@/lib/availableHours";
 import { isValidEmail } from "@/lib/validators";
+import { findOrCreateUser } from "@/lib/users";
 
 type Session = {
   step: string;
@@ -274,9 +275,9 @@ async function registroCorreo(from: string, text: string, session: Session) {
   if (existingUser) {
     reply = "⚠️ Ya estás registrado con este número.";
   } else {
-    await User.create({
+    await findOrCreateUser({
       whatsapp: from,
-      name: session.name,
+      name: session.name!,
       email: session.email,
     });
 
