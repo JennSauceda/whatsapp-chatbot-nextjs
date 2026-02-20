@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/ConfirmModal";
+import RescheduleModal from "@/components/RescheduleModal";
 
 type Appointment = {
   _id: string;
@@ -21,6 +22,7 @@ export default function AdminAppointmentsPage() {
   const [openModal, setOpenModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [openReschedule, setOpenReschedule] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -103,6 +105,15 @@ export default function AdminAppointmentsPage() {
                   <button
                     onClick={() => {
                       setSelectedId(a._id);
+                      setOpenReschedule(true);
+                    }}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Reprogramar
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedId(a._id);
                       setOpenModal(true);
                     }}
                     className="text-red-600 hover:underline"
@@ -134,6 +145,19 @@ export default function AdminAppointmentsPage() {
         onCancel={() => {
           setOpenModal(false);
           setSelectedId(null);
+        }}
+      />
+
+      <RescheduleModal
+        open={openReschedule}
+        appointmentId={selectedId}
+        onClose={() => {
+          setOpenReschedule(false);
+          setSelectedId(null);
+        }}
+        onSuccess={() => {
+          router.refresh();
+          load();
         }}
       />
     </div>
