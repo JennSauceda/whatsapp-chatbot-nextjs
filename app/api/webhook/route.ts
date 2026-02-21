@@ -6,6 +6,7 @@ import { isValidDate } from "@/lib/validators";
 import { BASE_HOURS } from "@/lib/availableHours";
 import { isValidEmail } from "@/lib/validators";
 import { findOrCreateUser } from "@/lib/users";
+import BlockedDate from "@/models/BlockedDate";
 
 type Session = {
   step: string;
@@ -40,9 +41,7 @@ export async function GET(req: NextRequest) {
   return new NextResponse("Forbidden", { status: 403 });
 }
 console.log("servidor listo");
-/* =========================
-   POST SIMPLE (PASO 5.2)
-========================= */
+
 export async function POST(req: NextRequest) {
   await connectDB();
 
@@ -303,6 +302,12 @@ async function fechaCita(from: string, text: string, session: Session) {
       "Ejemplo: 2026-01-20\n\n" +
       "O escribe *cancelar*";
     console.log("Fecha inválida recibida:", text);
+    return reply;
+  }
+  const blocked = await BlockedDate.findOne({ date: session.date });
+
+  if (blocked) {
+    reply = `❌ Ese día está disponible selecciona otra fecha.\n\n`;
     return reply;
   }
 

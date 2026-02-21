@@ -5,6 +5,7 @@ import User from "@/models/User";
 import { findOrCreateUser } from "@/lib/users";
 import { verifyAdmin } from "@/lib/auth";
 import { BASE_HOURS } from "@/lib/availableHours";
+import BlockedDate from "@/models/BlockedDate";
 
 export async function POST(req: Request) {
   try {
@@ -77,6 +78,14 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Horario ya ocupado" },
         { status: 409 },
+      );
+    }
+    const blocked = await BlockedDate.findOne({ date });
+
+    if (blocked) {
+      return NextResponse.json(
+        { error: "Este día está bloqueado" },
+        { status: 400 },
       );
     }
 

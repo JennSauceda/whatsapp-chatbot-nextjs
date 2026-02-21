@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/ConfirmModal";
 import RescheduleModal from "@/components/RescheduleModal";
 
+
 type Appointment = {
   _id: string;
   date: string;
@@ -80,6 +81,7 @@ export default function AdminAppointmentsPage() {
       >
         + Nueva cita
       </Link>
+      
       <div className="overflow-x-auto rounded-lg border bg-white">
         <table className="w-full text-sm">
           <thead className="bg-gray-100 text-left">

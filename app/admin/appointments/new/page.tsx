@@ -20,7 +20,7 @@ export default function NewAppointmentPage() {
     setError("");
     setLoading(true);
 
-    console.log(form);  
+    console.log(form);
     const res = await fetch("/api/admin/appointments/manual", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -82,6 +82,17 @@ export default function NewAppointmentPage() {
             setAvailableHours([]);
 
             if (!date) return;
+            const blockedDates = await fetch("/api/admin/blocked-dates").then(
+              (res) => res.json(),
+            );
+            const isBlocked = blockedDates.some(
+              (d: any) => d.date === date,
+            );
+
+            if (isBlocked) {
+              setAvailableHours([]);
+              return;
+            }
 
             const res = await fetch(
               `/api/admin/appointments/available?date=${date}`,

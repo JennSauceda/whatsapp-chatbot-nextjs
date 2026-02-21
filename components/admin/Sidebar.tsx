@@ -19,6 +19,9 @@ export default function Sidebar() {
         <Link href="/admin/users" className="block p-2 rounded hover:bg-gray-100">
           👤 Usuarios
         </Link>
+        <Link href="/admin/settings" className="block p-2 rounded hover:bg-gray-100">
+          ⚙️ Configuración
+        </Link>
       </nav>
     </aside>
   );

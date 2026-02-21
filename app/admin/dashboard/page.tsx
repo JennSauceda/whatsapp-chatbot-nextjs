@@ -3,15 +3,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import StatCard from "@/components/admin/StatCard";
+import StatsCharts from "@/components/admin/StatsCharts";
 
 type Stats = {
   totalUsers: number;
   totalAppointments: number;
   todayAppointments: number;
+  weekAppointments: number;
   nextAppointment?: {
     date: string;
     time: string;
   };
+  topHours: { _id: string; count: number }[];
+  perDay: { _id: string; count: number }[];
 };
 
 export default function DashboardPage() {
@@ -38,6 +42,7 @@ export default function DashboardPage() {
         <StatCard title="Citas totales" value={stats.totalAppointments} />
 
         <StatCard title="Citas hoy" value={stats.todayAppointments} />
+        <StatCard title="Citas esta semana" value={stats.weekAppointments} />
 
         <StatCard
           title="Próxima cita"
@@ -48,6 +53,29 @@ export default function DashboardPage() {
           }
           subtitle="Fecha más cercana"
         />
+      </div>
+      <StatsCharts perDay={stats.perDay} topHours={stats.topHours} />
+      <div className="rounded-xl bg-white p-5 shadow-sm border">
+        <h2 className="text-lg font-semibold mb-2">Horas más solicitadas</h2>
+        <ul className="space-y-1">
+          {stats.topHours.map((h) => (
+            <li key={h._id} className="flex justify-between">
+              <span>{h._id}</span>
+              <span>{h.count} citas</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="rounded-xl bg-white p-5 shadow-sm border">
+        <h2 className="text-lg font-semibold mb-2">Últimos 7 días</h2>
+        <ul className="space-y-1">
+          {stats.perDay.map((d) => (
+            <li key={d._id} className="flex justify-between">
+              <span>{d._id}</span>
+              <span>{d.count}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

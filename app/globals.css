@@ -21,3 +21,16 @@
 .animate-fade-in {
   animation: fade-in 0.15s ease-out;
 }
+.react-calendar {
+  border: none;
+  width: 100%;
+}
+
+.react-calendar__tile--active {
+  background: #2563eb !important;
+  color: white;
+}
+
+.react-calendar__tile:hover {
+  background: #e5e7eb;
+}
