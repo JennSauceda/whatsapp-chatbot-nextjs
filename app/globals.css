@@ -28,9 +28,22 @@
 
 .react-calendar__tile--active {
   background: #2563eb !important;
-  color: white;
+  color: rgb(235, 6, 6);
 }
 
 .react-calendar__tile:hover {
-  background: #e5e7eb;
+  background: #ebe5e5;
+}
+/* Día bloqueado normal (no seleccionado) */
+.blocked-day {
+  background-color: #e5e7eb !important; /* gris */
+  color: #dc2626 !important; /* rojo */
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* Si el día bloqueado está seleccionado */
+.react-calendar__tile--active.blocked-day {
+  background-color: #2563eb !important; /* azul activo */
+  color: white !important;
 }

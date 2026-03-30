@@ -5,25 +5,41 @@ import Calendar from "react-calendar";
 
 import "react-calendar/dist/Calendar.css";
 
+type Value = Date | null;
+
 type BlockedDate = {
   date: string;
 };
+
 interface CalendarBlockerProps {
-  onDatesChange?: () => void;
+  blockedDates?: BlockedDate[];
+  onBlockedDatesChange?: (dates: BlockedDate[]) => void;
+  onDateToggle?: () => void;
 }
 
 export default function CalendarBlocker({
-  onDatesChange,
+  blockedDates: externalBlockedDates,
+  onBlockedDatesChange,
+  onDateToggle,
 }: CalendarBlockerProps) {
   const [value, setValue] = useState<Value>(null);
-  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
+  const [internalBlockedDates, setInternalBlockedDates] = useState<
+    BlockedDate[]
+  >([]);
+
+  // Usar fechas externas si se proporcionan, si no usar internas
+  const blockedDates = externalBlockedDates || internalBlockedDates;
 
   async function loadBlockedDates() {
     const res = await fetch("/api/admin/blocked-dates");
     const data = await res.json();
-    setBlockedDates(data);
-    if (onDatesChange) {
-      onDatesChange();
+
+    if (onBlockedDatesChange) {
+      // Si hay callback externo, actualizar padre
+      onBlockedDatesChange(data);
+    } else {
+      // Si no, actualizar estado interno
+      setInternalBlockedDates(data);
     }
   }
 
@@ -53,7 +69,12 @@ export default function CalendarBlocker({
       });
     }
 
-    loadBlockedDates();
+    await loadBlockedDates();
+
+    // Llamar al callback de toggle si existe
+    if (onDateToggle) {
+      onDateToggle();
+    }
   }
 
   return (
@@ -62,18 +83,22 @@ export default function CalendarBlocker({
 
       <Calendar
         onChange={(newValue) => {
-          setValue(newValue);
+          setValue(newValue as Date);
 
           if (newValue instanceof Date) {
             toggleBlock(newValue);
           }
         }}
         value={value}
-        tileClassName={({ date }) => {
+        tileClassName={({ date, view }) => {
+          if (view !== "month") return "";
+
           const formatted = formatDate(date);
           const isBlocked = blockedDates.some((d) => d.date === formatted);
 
-          return isBlocked ? "bg-red-500 text-white rounded-lg" : "";
+          if (!isBlocked) return "";
+
+          return "blocked-day";
         }}
       />
     </div>

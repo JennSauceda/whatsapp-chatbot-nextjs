@@ -44,6 +44,11 @@ export default function AdminSettingsPage() {
     loadBlockedDates();
   }
 
+  // Manejador para cuando CalendarBlocker actualice las fechas
+  const handleBlockedDatesChange = (dates: any[]) => {
+    setBlockedDates(dates);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Configuración</h1>
@@ -51,11 +56,12 @@ export default function AdminSettingsPage() {
       <div className="bg-white p-4 rounded-xl shadow space-y-4">
         <h2 className="font-semibold">Bloquear día completo</h2>
 
-        <div className="flex gap-2">
-          
-          <CalendarBlocker />
-         
-        </div>
+        {/* CalendarBlocker sincronizado */}
+        <CalendarBlocker
+          blockedDates={blockedDates}
+          onBlockedDatesChange={handleBlockedDatesChange}
+          onDateToggle={loadBlockedDates}
+        />
 
         <div>
           <h3 className="mt-4 font-medium">Días bloqueados</h3>

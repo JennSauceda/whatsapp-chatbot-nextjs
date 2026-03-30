@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Appointment from "@/models/Appointment";
 import { verifyAdmin } from "@/lib/auth";
+import { sendMessage } from "@/lib/whatsapp";
 
 export async function DELETE(
   req: Request,
@@ -47,7 +48,16 @@ export async function PATCH(
     return NextResponse.json({ error: "Horario ya ocupado" }, { status: 409 });
   }
 
-  await Appointment.findByIdAndUpdate(id, { date, time });
+  const appo = await Appointment.findByIdAndUpdate(id, { date, time });
+  console.log("CITA ACTUALIZADA: ", appo);
+  await sendMessage(
+    appo.userWhatsapp,
+    `📅 Tu cita ha sido reprogramada para el 
+    
+    ☀️${date} 
+    
+    ⏰ a las ${time}.`,
+  );
 
   return NextResponse.json({ success: true });
 }
